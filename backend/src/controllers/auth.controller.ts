@@ -45,7 +45,8 @@ export const login = async (req: Request, res: Response) => {
             httpOnly: true, // Prevents client-side JS from accessing the cookie
             secure: process.env.NODE_ENV === 'production', // Only sends over HTTPS in production
             maxAge: 30 * 24 * 60 * 60 * 1000, // Expiration time in milliseconds (30 days)
-            sameSite: 'strict' // Helps mitigate CSRF attacks
+            sameSite: 'lax', // Allows cookies to be sent with cross-site requests
+            path: '/' // Ensure cookie is available for all paths
         });
 
         res.status(HttpStatus.OK).send({
@@ -104,7 +105,8 @@ export const signup = async (req: Request, res: Response) => {
             httpOnly: true, // Prevents client-side JS from accessing the cookie
             secure: process.env.NODE_ENV === 'production', // Only sends over HTTPS in production
             maxAge: 30 * 24 * 60 * 60 * 1000, // Expiration time in milliseconds (30 days)
-            sameSite: 'strict' // Helps mitigate CSRF attacks
+            sameSite: 'lax', // Allows cookies to be sent with cross-site requests
+            path: '/' // Ensure cookie is available for all paths
         });
 
         res.status(HttpStatus.CREATED).send({
