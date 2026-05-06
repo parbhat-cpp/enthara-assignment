@@ -42,11 +42,11 @@ export const login = async (req: Request, res: Response) => {
         const token = jwt.sign(userData, process.env.JWT_SECRET as string, { expiresIn: '30d' });
 
         res.cookie('token', token, {
-            httpOnly: true, // Prevents client-side JS from accessing the cookie
-            secure: process.env.NODE_ENV === 'production', // Only sends over HTTPS in production
-            maxAge: 30 * 24 * 60 * 60 * 1000, // Expiration time in milliseconds (30 days)
-            sameSite: 'lax', // Allows cookies to be sent with cross-site requests
-            path: '/' // Ensure cookie is available for all paths
+            httpOnly: true,
+            secure: true,
+            maxAge: 30 * 24 * 60 * 60 * 1000,
+            sameSite: 'none',
+            path: '/'
         });
 
         res.status(HttpStatus.OK).send({
@@ -102,11 +102,11 @@ export const signup = async (req: Request, res: Response) => {
         const token = jwt.sign(userData, process.env.JWT_SECRET as string, { expiresIn: '30d' });
 
         res.cookie('token', token, {
-            httpOnly: true, // Prevents client-side JS from accessing the cookie
-            secure: process.env.NODE_ENV === 'production', // Only sends over HTTPS in production
-            maxAge: 30 * 24 * 60 * 60 * 1000, // Expiration time in milliseconds (30 days)
-            sameSite: 'lax', // Allows cookies to be sent with cross-site requests
-            path: '/' // Ensure cookie is available for all paths
+            httpOnly: true,
+            secure: true,
+            maxAge: 30 * 24 * 60 * 60 * 1000,
+            sameSite: 'none',
+            path: '/'
         });
 
         res.status(HttpStatus.CREATED).send({
