@@ -5,6 +5,7 @@ import jwt from "jsonwebtoken";
 
 import { SignUpInput, LoginInput, LoginSchema, SignUpSchema } from "../types/auth.types";
 import { User } from "../models/users.model";
+import { VerifiedRequest } from "../types/req.types";
 
 export const login = async (req: Request, res: Response) => {
     try {
@@ -47,7 +48,7 @@ export const login = async (req: Request, res: Response) => {
             sameSite: 'strict' // Helps mitigate CSRF attacks
         });
 
-        res.status(HttpStatus.CREATED).send({
+        res.status(HttpStatus.OK).send({
             success: true,
             message: "Login successful",
             data: userData,
@@ -124,5 +125,22 @@ export const signup = async (req: Request, res: Response) => {
             message: "Internal server error",
             error,
         });
+    }
+};
+
+export const getUser = async (req: VerifiedRequest, res: Response) => {
+    try {
+        const req_user = req.user;
+        const email = req.query.email as string;
+
+        if (!email) {
+            return res.status(HttpStatus.OK).json({ success: true, data: [] });
+        }
+
+        const users = await User.find({ email }).select('-password');
+        
+        res.status(HttpStatus.OK).json({ success: true, data: users });
+    } catch (error) {
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({ success: false, message: "Failed to fetch user", error });
     }
 };

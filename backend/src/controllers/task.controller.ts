@@ -81,12 +81,11 @@ export const updateTask = async (req: VerifiedRequest, res: Response) => {
         }
 
         if (isProjectCreator || isTaskCreator) {
-            const { title, description, dueDate, priority, assignedTo, status } = await zod.parseAsync(AdminTaskUpdateSchema, req.body);
+            const { title, description, dueDate, priority, status } = await zod.parseAsync(AdminTaskUpdateSchema, req.body);
             if (title !== undefined) task.title = title;
             if (description !== undefined) task.description = description;
             if (dueDate !== undefined) task.dueDate = new Date(dueDate);
             if (priority !== undefined) task.priority = priority;
-            if (assignedTo !== undefined) task.assignedTo = assignedTo.map(id => new mongoose.Types.ObjectId(id));
             if (status !== undefined) task.status = status;
         } else if (isAssignedUser) {
             const { status } = await zod.parseAsync(UserTaskUpdateSchema, req.body);
@@ -213,7 +212,7 @@ export const getTaskById = async (req: VerifiedRequest, res: Response) => {
             return res.status(HttpStatus.BAD_REQUEST).json({ message: 'Task ID is required' });
         }
 
-        const task = await Task.findById(taskId);
+        const task = await Task.findById(taskId).populate('assignedTo', 'email fullname');
 
         if (!task) {
             return res.status(HttpStatus.NOT_FOUND).json({ message: 'Task not found' });
@@ -262,9 +261,15 @@ export const getAllTasksByProjectId = async (req: VerifiedRequest, res: Response
             return res.status(HttpStatus.FORBIDDEN).json({ message: 'You are not authorized to view tasks in this project' });
         }
 
-        const tasks = await Task.find({ projectId: project._id });
+        const tasks = await Task.find({ projectId: project._id }).populate('assignedTo', 'email fullname');
 
-        const tasksWithRole = tasks.map(task => ({
+        const filteredTasks = tasks.filter(task => {
+            const isTaskCreator = task.createdBy.equals(req_user._id);
+            const isAssignedToTask = task.assignedTo.some((id: mongoose.Types.ObjectId) => id.equals(req_user._id));
+            return isProjectCreator || isTaskCreator || isAssignedToTask;
+        });
+
+        const tasksWithRole = filteredTasks.map(task => ({
             ...task.toObject(),
             isAdmin: task.createdBy.equals(req_user._id) || isProjectCreator
         }));

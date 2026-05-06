@@ -6,16 +6,18 @@ import * as zod from "zod";
 import { VerifiedRequest } from '../types/req.types';
 import { CreateProjectSchema } from '../types/project.types';
 import { Project } from '../models/project.model';
+import { Task } from '../models/task.model';
 
 export const createProject = async (req: VerifiedRequest, res: Response) => {
   try {
     const req_user = req.user;
-    const { name, description } = await zod.parseAsync(CreateProjectSchema, req.body);
+    const { name, description, members } = await zod.parseAsync(CreateProjectSchema, req.body);
 
     const newProject = new Project({
       name,
       description,
       createdBy: req_user._id,
+      members: members || [],
     });
 
     await newProject.save();
@@ -90,6 +92,12 @@ export const removeUserFromProject = async (req: VerifiedRequest, res: Response)
             return res.status(HttpStatus.BAD_REQUEST).json({ message: "User is not a member of the project" });
         }
 
+        const tasksAssignedToUser = await Task.find({ project: projectId, assignedTo: { $in: [userIdObj] } });
+
+        if (tasksAssignedToUser.length > 0) {
+            return res.status(HttpStatus.BAD_REQUEST).json({ message: "Cannot remove user from project because they are assigned to tasks. Please reassign or unassign their tasks first." });
+        }
+
         project.members = project.members.filter(memberId => memberId.toString() !== userIdObj.toString());
         await project.save();
 
@@ -108,7 +116,7 @@ export const getProjectById = async (req: VerifiedRequest, res: Response) => {
             return res.status(HttpStatus.BAD_REQUEST).json({ message: "Project ID is required" });
         }
 
-        const project = await Project.findById(projectId);
+        const project = await Project.findById(projectId).populate('createdBy', 'fullname email').populate('members', 'fullname email');
 
         if (!project) {
             return res.status(HttpStatus.NOT_FOUND).json({ message: "Project not found" });

@@ -17,7 +17,6 @@ export const AdminTaskUpdateSchema = zod.object({
         message: 'Invalid date format',
     }).optional(),
     priority: zod.enum(['Low', 'Medium', 'High']).optional(),
-    assignedTo: zod.array(zod.string()).optional(),
     status: zod.enum(['To Do', 'In Progress', 'Done']).optional(),
 });
 
