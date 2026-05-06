@@ -9,11 +9,17 @@ const app: Express = express();
 
 ConnectDB();
 
+// CORS Configuration
+const corsOrigin = process.env.NODE_ENV === "production" 
+    ? process.env.CORS_ORIGIN || "*"
+    : "http://localhost:3000";
+
 app.use(cors({
-    origin: process.env.NODE_ENV === "production" ? process.env.CORS_ORIGIN : "http://localhost:3000",
+    origin: corsOrigin,
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
     credentials: true,
+    optionsSuccessStatus: 200,
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
